@@ -1,1 +1,5 @@
-/*  /index.html  200
+# kihera-trace Netlify site (trace.kihera-farms.com) publishes THIS directory as
+# its root. Serve the page for any /t/{token} link the QR encodes. Netlify
+# serves real files (e.g. /kihera-logo.png) before applying redirects, so only
+# tokens fall through to the page.
+/t/*   /index.html   200
