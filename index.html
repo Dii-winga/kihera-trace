@@ -191,6 +191,7 @@
       <div class="top">
         <div>
           <div class="tag">${esc(a.tag || 'Animal')}</div>
+          ${a.current_tag ? `<div style="color:var(--muted);font-size:12px;margin-top:2px">now tagged <b style="color:var(--ink)">${esc(a.current_tag)}</b></div>` : ''}
           ${meta ? `<div class="kind">${meta}</div>` : ''}
         </div>
         ${healthChip(a.health)}
