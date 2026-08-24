@@ -226,7 +226,14 @@
     document.getElementById('items').innerHTML =
       (d.items || []).map(renderItem).join('') || '<div class="item"><div class="nm">—</div></div>';
     document.getElementById('animals').innerHTML =
-      (d.animals || []).map(renderAnimal).join('') || '<div class="clean">No animal records.</div>';
+      (d.animals || []).map(renderAnimal).join('') ||
+      // Roughly a hundred invoices went out carrying a QR before the app
+      // stopped printing one for sales with nothing behind them (0161). Those
+      // codes are in customers' hands and cannot be recalled, so this says what
+      // is true rather than showing a bare "No animal records." — which reads,
+      // to someone who scanned expecting provenance, like the claim failing.
+      '<div class="clean">Animal-level records were not kept for this sale. ' +
+      'The purchase details above are what this farm holds for it.</div>';
     show('record');
   }
 
