@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Kihera Farms — Traceability</title>
+<title>Traceability record</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -19,6 +19,7 @@
 
   header{text-align:center;padding:36px 0 22px}
   header img{width:150px;height:auto}
+  .farmname{font-size:21px;font-weight:700;color:var(--dark);line-height:1.25}
   .kicker{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;
     color:var(--lime-deep);font-weight:600;margin-top:14px}
   .refline{font-size:13px;color:var(--muted);margin-top:6px}
@@ -78,15 +79,14 @@
   </div>
 
   <div id="notfound" class="state hidden">
-    <img src="/kihera-logo.png" alt="Kihera Farms" style="width:120px;opacity:.5;margin-bottom:18px">
     <h1>Record not found</h1>
-    <p>This link doesn’t match a Kihera Farms record. It may have expired, or the
+    <p>This link doesn’t match a record we hold. It may have expired, or the
        code may be mistyped.</p>
   </div>
 
   <div id="record" class="hidden">
     <header>
-      <img src="/kihera-logo.png" alt="Kihera Farms">
+      <div class="farmname" id="farm-head"></div>
       <div class="kicker">Traceability record</div>
       <div class="refline"><b id="ref"></b> · <span id="date"></span></div>
     </header>
@@ -105,8 +105,8 @@
 
     <footer>
       <div><b id="farm"></b></div>
-      <div>Kodzobi, Volta Region · Ghana · +233 25 796 9161</div>
-      <div style="margin-top:8px">Every claim here is backed by records Kihera keeps for each animal.</div>
+      <div id="farm-contact"></div>
+      <div style="margin-top:8px" id="farm-claim"></div>
     </footer>
   </div>
 
@@ -147,7 +147,7 @@
   function originLine(a) {
     if (a.origin === 'born_on_farm')
       return 'Born on farm' + (a.born_on ? ' · ' + fmtDate(a.born_on) : '');
-    if (a.origin === 'purchased') return 'Purchased and finished at Kihera';
+    if (a.origin === 'purchased') return 'Purchased and finished on this farm';
     return '';
   }
 
@@ -219,8 +219,24 @@
   function render(d) {
     document.getElementById('ref').textContent = d.reference || (d.kind === 'batch' ? 'Batch' : 'Record');
     document.getElementById('date').textContent = fmtDate(d.date);
+    // No sentence means the records do not support one — hide the panel rather
+    // than leave an empty card implying something was withheld.
     document.getElementById('method').textContent = d.method || '';
-    document.getElementById('farm').textContent = d.farm || 'Kihera Farms Ltd';
+    document.querySelector('.card.method').style.display = d.method ? '' : 'none';
+    // The seller names itself or is not named. There is no house default: this
+    // page serves every farm on the platform, and printing one farm's identity
+    // on another's record is the fault this replaced.
+    const farm = d.farm || '';
+    document.getElementById('farm').textContent = farm;
+    document.getElementById('farm-head').textContent = farm;
+    if (farm) document.title = farm + ' — Traceability record';
+    const contact = [d.farm_address, d.farm_phone, d.farm_email]
+      .filter(Boolean).join(' · ');
+    document.getElementById('farm-contact').textContent = contact;
+    // Only claim record-keeping when the server found records to back it.
+    document.getElementById('farm-claim').textContent = d.method
+      ? 'Every claim here is backed by records ' + (farm || 'this farm') + ' keeps.'
+      : '';
     document.getElementById('items-title').textContent =
       d.kind === 'batch' ? 'Cuts in this batch' : 'What you bought';
     document.getElementById('items').innerHTML =
