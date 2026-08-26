@@ -39,7 +39,11 @@
   .item .nm{font-size:14px;font-weight:600;color:var(--ink)}
   .item .sub{font-size:11px;color:var(--lime-deep);margin-top:3px}
   .item .wt{font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;
-    font-variant-numeric:tabular-nums}
+    text-align:right;font-variant-numeric:tabular-nums}
+  .item .measure{display:block;font-size:11px;font-weight:500;color:var(--muted);
+    margin-top:2px}
+  .weight-note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:12px;
+    padding-top:12px;border-top:1px solid var(--hair)}
 
   .animal{border:1px solid var(--hair);border-radius:12px;padding:15px;margin-top:10px}
   .animal:first-of-type{margin-top:0}
@@ -96,6 +100,7 @@
     <div class="card">
       <h2 id="items-title">What you bought</h2>
       <div id="items"></div>
+      <p id="weight-note" class="weight-note hidden"></p>
     </div>
 
     <div class="card">
@@ -169,7 +174,7 @@
     if (a.days_on_farm != null)
       rows.push(['Days on farm', `${a.days_on_farm} days`]);
     if (a.final_weight_kg != null)
-      rows.push(['Final weight', `${Number(a.final_weight_kg).toFixed(1)} kg`]);
+      rows.push(['Live weight', `${Number(a.final_weight_kg).toFixed(1)} kg`]);
     if (feed.length)
       rows.push(['Feed', feed.join(' · ')]);
 
@@ -207,12 +212,16 @@
     if (it.batch_refs && it.batch_refs.length) sub.push('Batch ' + it.batch_refs.map(esc).join(', '));
     if (it.animal_count) sub.push(it.animal_count === 1 ? '1 animal' : `${it.animal_count} animals`);
     const wt = it.weight_kg != null ? `${Number(it.weight_kg).toFixed(1)} kg` : '';
+    // Only name carcass weight when the disclosure says that explicitly.
+    // Older payloads called any animal-linked line "live", even for a carcass
+    // sale, so leaving those unlabelled is safer during a staggered deploy.
+    const measure = it.kind === 'carcass' && wt ? 'carcass weight' : '';
     return `<div class="item">
       <div>
         <div class="nm">${esc(it.label)}</div>
         ${sub.length ? `<div class="sub">${sub.join(' · ')}</div>` : ''}
       </div>
-      <div class="wt">${wt}</div>
+      <div class="wt">${wt}${measure ? `<span class="measure">${measure}</span>` : ''}</div>
     </div>`;
   }
 
@@ -239,10 +248,20 @@
       : '';
     document.getElementById('items-title').textContent =
       d.kind === 'batch' ? 'Cuts in this batch' : 'What you bought';
+    const items = d.items || [];
+    const animals = d.animals || [];
     document.getElementById('items').innerHTML =
-      (d.items || []).map(renderItem).join('') || '<div class="item"><div class="nm">—</div></div>';
+      items.map(renderItem).join('') || '<div class="item"><div class="nm">—</div></div>';
+    const weightNote = document.getElementById('weight-note');
+    const comparesCarcassWithLive =
+      items.some(it => it.kind === 'carcass' && it.weight_kg != null) &&
+      animals.some(a => a.final_weight_kg != null);
+    weightNote.textContent = comparesCarcassWithLive
+      ? 'Carcass weight and animal live weight are different measures, so the figures are not expected to match.'
+      : '';
+    weightNote.classList.toggle('hidden', !comparesCarcassWithLive);
     document.getElementById('animals').innerHTML =
-      (d.animals || []).map(renderAnimal).join('') ||
+      animals.map(renderAnimal).join('') ||
       // Roughly a hundred invoices went out carrying a QR before the app
       // stopped printing one for sales with nothing behind them (0161). Those
       // codes are in customers' hands and cannot be recalled, so this says what
