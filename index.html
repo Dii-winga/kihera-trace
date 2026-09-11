@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Traceability record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -14,63 +16,144 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--ink);
-    -webkit-font-smoothing:antialiased;line-height:1.5;padding:0 16px 48px}
+    -webkit-font-smoothing:antialiased;line-height:1.5;
+    /* The farm heading was clipping under browser chrome on first paint. */
+    padding:0 16px calc(48px + env(safe-area-inset-bottom))}
   .wrap{max-width:560px;margin:0 auto}
 
-  header{text-align:center;padding:36px 0 22px}
-  header img{width:150px;height:auto}
-  .farmname{font-size:21px;font-weight:700;color:var(--dark);line-height:1.25}
+  /* ---- one centred identity group ------------------------------------ */
+  /* Logo, farm name and the record label share a centre axis.
+     NO LOGO IS IN THIS MARKUP, which was 0163's actual point: the page serves
+     every farm on the platform and it used to ship one tenant's image, so an
+     outgrower's buyer saw Kihera's mark over another farm's record. The mark
+     is fetched per TOKEN instead (0274), so the record decides whose it is.
+     Bounded, because a tall logo pushing the invoice number off the first
+     screen is worse than no logo at all. */
+  header{display:flex;flex-direction:column;align-items:center;text-align:center;
+    gap:6px;padding:calc(28px + env(safe-area-inset-top)) 0 10px}
+  header .mark{max-height:56px;max-width:170px;object-fit:contain;display:none}
+  header .mark.on{display:block;margin-bottom:4px}
+  .farmname{font-size:22px;font-weight:700;color:var(--dark);line-height:1.25;
+    overflow-wrap:anywhere}
   .kicker{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;
-    color:var(--lime-deep);font-weight:600;margin-top:14px}
-  .refline{font-size:13px;color:var(--muted);margin-top:6px}
-  .refline b{color:var(--ink);font-weight:600}
+    color:var(--lime-deep);font-weight:600}
+  .contact{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.7}
+  .contact a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--hair);
+    display:inline-block;padding:6px 2px;min-height:44px;line-height:32px}
+  .contact a:hover,.contact a:focus-visible{color:var(--lime-deep)}
+  .contact .sep{color:var(--faint)}
+
+  /* ---- preview notice ------------------------------------------------- */
+  /* Secondary to the record it introduces, per the settled experience: a large
+     panel here would dominate the thing it is describing. */
+  .preview{background:var(--warn-tint);border-radius:12px;padding:12px 14px;
+    margin-top:14px;font-size:13px;color:var(--ink);line-height:1.6}
+  .preview b{display:block;font-weight:600;color:var(--warn);font-size:11px;
+    letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
 
   .card{background:#fff;border:1px solid var(--hair);border-radius:14px;
-    padding:18px 18px;margin-top:14px;box-shadow:0 2px 10px rgba(1,37,39,.05)}
+    padding:18px;margin-top:14px;box-shadow:0 2px 10px rgba(1,37,39,.05)}
   .card h2{font-size:11px;letter-spacing:.8px;text-transform:uppercase;
     color:var(--muted);font-weight:600;margin-bottom:12px}
 
-  .method{background:var(--lime-tint);border:none}
-  .method p{font-size:14px;color:var(--lime-deep);font-weight:500;line-height:1.6}
-
-  .item{display:flex;justify-content:space-between;gap:12px;padding:11px 0;
-    border-bottom:1px solid var(--hair)}
-  .item:last-child{border-bottom:none}
-  .item .nm{font-size:14px;font-weight:600;color:var(--ink)}
-  .item .sub{font-size:11px;color:var(--lime-deep);margin-top:3px}
-  .item .wt{font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;
-    text-align:right;font-variant-numeric:tabular-nums}
-  .item .measure{display:block;font-size:11px;font-weight:500;color:var(--muted);
-    margin-top:2px}
+  /* ---- sale identity -------------------------------------------------- */
+  .saleline{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+  .saleref{font-size:23px;font-weight:600;color:var(--dark);line-height:1.2;
+    overflow-wrap:anywhere}
+  .saledate{font-size:14px;color:var(--muted);white-space:nowrap}
+  .bought{display:flex;flex-wrap:wrap;justify-content:space-between;
+    align-items:flex-end;gap:10px 16px;margin-top:14px;padding-top:14px;
+    border-top:1px solid var(--hair)}
+  .bought .count{font-size:19px;font-weight:600;color:var(--ink)}
+  .bought .scope{font-size:13px;color:var(--muted);margin-top:2px}
+  .bought .amt{text-align:right;margin-left:auto}
+  .bought .kg{font-size:31px;font-weight:600;color:var(--dark);line-height:1.05;
+    font-variant-numeric:tabular-nums}
+  .bought .kglabel{font-size:13px;color:var(--muted);margin-top:2px}
   .weight-note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:12px;
     padding-top:12px;border-top:1px solid var(--hair)}
 
-  .animal{border:1px solid var(--hair);border-radius:12px;padding:15px;margin-top:10px}
-  .animal:first-of-type{margin-top:0}
-  .animal .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-  .animal .tag{font-size:15px;font-weight:700;color:var(--dark)}
-  .animal .kind{font-size:12px;color:var(--muted);margin-top:2px}
-  .chip{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
-  .chip.ok{background:var(--lime-tint);color:var(--lime-deep)}
-  .chip.warn{background:var(--warn-tint);color:var(--warn)}
-  .rows{margin-top:12px;display:grid;gap:9px}
-  .row{display:flex;gap:10px;font-size:13px}
-  .row .k{color:var(--muted);flex:0 0 116px}
-  .row .v{color:var(--ink);flex:1}
-  .row .v .tagline{color:var(--muted);font-size:12px}
-  .meds{margin-top:3px;display:grid;gap:5px}
-  .med{font-size:12.5px;color:var(--ink)}
-  .med .w{color:var(--muted)}
-  .clean{font-size:13px;color:var(--lime-deep);font-weight:500}
+  /* ---- withdrawal statement ------------------------------------------- */
+  /* Word and icon, never colour alone. */
+  .verdict{display:flex;gap:12px;align-items:flex-start;border-radius:14px;
+    padding:15px 16px;margin-top:14px}
+  .verdict > span:last-child{min-width:0}
+  .verdict .dot{flex:0 0 34px;height:34px;border-radius:50%;display:flex;
+    align-items:center;justify-content:center;font-size:17px;font-weight:700;
+    color:#fff}
+  .verdict .ttl{display:block;font-size:16px;font-weight:600;line-height:1.3}
+  .verdict .sub{display:block;font-size:13.5px;color:var(--ink);margin-top:3px;
+    line-height:1.55}
+  .verdict.ok{background:var(--lime-tint);border:1px solid #CFE9B4}
+  .verdict.ok .dot{background:var(--lime-deep)}
+  .verdict.ok .ttl{color:var(--lime-deep)}
+  .verdict.hold{background:var(--warn-tint);border:1px solid #EBD79B}
+  .verdict.hold .dot{background:var(--warn)}
+  .verdict.hold .ttl{color:var(--warn)}
 
-  footer{text-align:center;font-size:11px;color:var(--faint);margin-top:26px;line-height:1.8}
-  footer b{color:var(--lime-deep)}
+  /* ---- animal --------------------------------------------------------- */
+  .animal{border-top:1px solid var(--hair);padding-top:16px;margin-top:16px}
+  .animal:first-of-type{border-top:none;padding-top:0;margin-top:0}
+  .tag{font-size:22px;font-weight:600;color:var(--dark);line-height:1.2;
+    overflow-wrap:anywhere}
+  .retag{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .kind{font-size:14px;color:var(--muted);margin-top:3px}
+  .facts{margin-top:14px;display:grid;gap:10px}
+  .fact{display:flex;gap:14px;font-size:14px;align-items:baseline}
+  .fact .k{color:var(--muted);flex:0 0 108px}
+  .fact .v{color:var(--ink);flex:1;min-width:0}
+  /* Narrow widths and large text stack rather than crush a fixed grid. */
+  @media (max-width:380px){
+    .fact{flex-direction:column;gap:1px}
+    .fact .k{flex:none}
+  }
+
+  .sect{margin-top:16px;padding-top:14px;border-top:1px solid var(--hair)}
+  .sect h3{font-size:15px;font-weight:600;color:var(--ink)}
+  .sect .note{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.55}
+
+  /* feeds: progressive disclosure, a real button */
+  .feedbtn{width:100%;background:none;border:none;padding:14px 0;margin:0;
+    font:inherit;color:inherit;text-align:left;cursor:pointer;display:flex;
+    align-items:center;gap:12px;min-height:48px}
+  .feedbtn .txt{flex:1;min-width:0}
+  .feedbtn h3{font-size:15px;font-weight:600}
+  .feedbtn .chev{flex:0 0 auto;color:var(--muted);font-size:13px;
+    transition:transform .18s ease}
+  .feedbtn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .feedbtn:focus-visible{outline:2px solid var(--lime-deep);outline-offset:3px;
+    border-radius:6px}
+  @media (prefers-reduced-motion:reduce){.feedbtn .chev{transition:none}}
+  .feedlist{display:grid;gap:8px;padding-bottom:4px}
+  .feedlist li{list-style:none;font-size:14px;color:var(--ink)}
+  .feedlist .stage{color:var(--muted);font-size:12.5px}
+
+  /* medication: never behind a collapsed control */
+  .med{padding:12px 0;border-bottom:1px solid var(--hair)}
+  .med:last-of-type{border-bottom:none}
+  .med .nm{font-size:15px;color:var(--ink);font-weight:500;overflow-wrap:anywhere}
+  .med .when{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.55}
+  .med .when .cleared{color:var(--lime-deep)}
+  .med .when .open{color:var(--warn)}
+  .more{background:none;border:1px solid var(--hair);border-radius:10px;
+    padding:12px 14px;margin-top:12px;width:100%;font:inherit;font-size:14px;
+    font-weight:500;color:var(--lime-deep);cursor:pointer;min-height:48px}
+  .more:focus-visible{outline:2px solid var(--lime-deep);outline-offset:2px}
+  .empty{font-size:14px;color:var(--muted);line-height:1.6}
+
+  .raised p{font-size:14px;color:var(--ink);line-height:1.65}
+  .raised p + p{margin-top:10px}
+  .raised h2{margin-bottom:10px}
+
+  footer{text-align:center;font-size:12.5px;color:var(--muted);margin-top:22px;
+    line-height:1.7}
 
   .state{text-align:center;padding:60px 20px;color:var(--muted)}
   .state h1{font-size:18px;color:var(--ink);margin-bottom:8px}
   .spinner{width:26px;height:26px;border:3px solid var(--hair);border-top-color:var(--lime);
     border-radius:50%;margin:0 auto 16px;animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation:none}}
   .hidden{display:none}
 </style>
 </head>
@@ -90,29 +173,51 @@
 
   <div id="record" class="hidden">
     <header>
+      <img class="mark" id="farm-mark" alt="">
       <div class="farmname" id="farm-head"></div>
-      <div class="kicker">Traceability record</div>
-      <div class="refline"><b id="ref"></b> · <span id="date"></span></div>
+      <div class="kicker" id="kicker">Traceability record</div>
+      <div class="contact" id="farm-contact"></div>
     </header>
 
-    <div class="card method"><p id="method"></p></div>
+    <div id="preview-note" class="preview hidden">
+      <b>Buyer preview</b>
+      This is what a buyer will see after scanning the invoice QR code. The
+      invoice number, sale date and sale weight are added when the sale is
+      recorded.
+    </div>
 
-    <div class="card">
-      <h2 id="items-title">What you bought</h2>
-      <div id="items"></div>
+    <div class="card" id="summary">
+      <h2 id="summary-title">What you bought</h2>
+      <div class="saleline">
+        <div class="saleref" id="ref"></div>
+        <div class="saledate" id="date"></div>
+      </div>
+      <div class="bought">
+        <div>
+          <div class="count" id="count"></div>
+          <div class="scope" id="scope"></div>
+        </div>
+        <div class="amt">
+          <div class="kg" id="kg"></div>
+          <div class="kglabel" id="kglabel"></div>
+        </div>
+      </div>
       <p id="weight-note" class="weight-note hidden"></p>
     </div>
 
+    <div id="verdict"></div>
+
     <div class="card">
-      <h2>The animals behind it</h2>
+      <h2 id="animals-title">The animal</h2>
       <div id="animals"></div>
     </div>
 
-    <footer>
-      <div><b id="farm"></b></div>
-      <div id="farm-contact"></div>
-      <div style="margin-top:8px" id="farm-claim"></div>
-    </footer>
+    <div class="card raised" id="raised-card">
+      <h2 id="raised-title">How this animal was raised</h2>
+      <div id="raised"></div>
+    </div>
+
+    <footer id="foot"></footer>
   </div>
 
 </div>
@@ -127,12 +232,14 @@
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const fmtDate = s => {
     if (!s) return '';
-    const d = new Date(s + 'T00:00:00');
-    if (isNaN(d)) return s;
+    const d = new Date(String(s).slice(0,10) + 'T00:00:00');
+    if (isNaN(d)) return String(s);
     return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
   };
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const kg = v => `${Number(v).toFixed(1)} kg`;
+  const plural = (n, one, many) => n === 1 ? one : many;
 
   // token = last path segment (/t/{token}) or ?t= fallback
   function readToken() {
@@ -144,122 +251,309 @@
     return parts.length ? parts[parts.length - 1] : '';
   }
 
+  // The token this record was resolved with. The mark is fetched per token so
+  // the page can never show one farm's image over another's record.
+  let lastToken = '';
+
   function show(id) {
     for (const s of ['loading','notfound','record'])
       document.getElementById(s).classList.toggle('hidden', s !== id);
   }
 
+  // ---- header ----------------------------------------------------------
+  function renderHeader(d) {
+    const farm = d.farm || '';
+    document.getElementById('farm-head').textContent = farm;
+    // THE MARK, IF THE FARM HAS ONE. A redirect to a signed URL; 404 when the
+    // farm has not uploaded one, when the token is revoked, or when Storage is
+    // unwell. Every one of those is the same answer here - leave it hidden and
+    // let the farm's name stand, which is what this page did before 0274.
+    //
+    // Only on the anonymous page: the in-app preview has no trace token to ask
+    // with, and reaches the same farm's logo through its own signed-in path.
+    const mark = document.getElementById('farm-mark');
+    if (mark && d.kind !== 'preview' && lastToken) {
+      mark.onload = () => mark.classList.add('on');
+      mark.onerror = () => mark.classList.remove('on');
+      mark.alt = farm ? farm + ' logo' : '';
+      mark.src = SUPABASE_URL + '/functions/v1/trace-logo?t=' +
+                 encodeURIComponent(lastToken);
+    }
+    document.getElementById('kicker').textContent =
+      d.kind === 'preview' ? 'Traceability preview' : 'Traceability record';
+    if (farm) {
+      // ' · ', not an em dash: the browser tab is user-facing copy and the
+      // substitution table in DESIGN.md §3 covers it. Carried over from the
+      // old page, which used one here.
+      document.title = farm + (d.kind === 'preview'
+        ? ' · Traceability preview' : ' · Traceability record');
+    }
+    // Phone and email are actions, not decoration. Address is not a link.
+    const bits = [];
+    if (d.farm_phone) {
+      const t = esc(d.farm_phone);
+      bits.push(`<a href="tel:${t.replace(/[^+0-9]/g,'')}" ` +
+                `aria-label="Call ${esc(farm)} on ${t}">${t}</a>`);
+    }
+    if (d.farm_email) {
+      const e = esc(d.farm_email);
+      bits.push(`<a href="mailto:${e}" aria-label="Email ${esc(farm)} at ${e}">${e}</a>`);
+    }
+    const addr = d.farm_address ? `<div>${esc(d.farm_address)}</div>` : '';
+    document.getElementById('farm-contact').innerHTML =
+      addr + (bits.length ? `<div>${bits.join('<span class="sep"> · </span>')}</div>` : '');
+  }
+
+  // ---- what you bought -------------------------------------------------
+  function renderSummary(d, animals) {
+    const preview = d.kind === 'preview';
+    const batch = d.kind === 'batch';
+    document.getElementById('preview-note').classList.toggle('hidden', !preview);
+    document.getElementById('summary-title').textContent =
+      batch ? 'This batch' : preview ? 'What a buyer would see' : 'What you bought';
+
+    // Real-world identity, never a generic heading. A completed sale with no
+    // number says so rather than borrowing the animal's tag.
+    const ref = document.getElementById('ref');
+    const date = document.getElementById('date');
+    if (preview) {
+      ref.textContent = 'Not sold yet';
+      date.textContent = 'Farm records as at ' + fmtDate(d.date);
+    } else if (batch) {
+      ref.textContent = d.reference ? 'Batch ' + d.reference : 'Batch reference not assigned';
+      date.textContent = d.date ? 'Slaughtered ' + fmtDate(d.date) : '';
+    } else {
+      ref.textContent = d.reference ? 'Invoice ' + d.reference : 'Invoice number not assigned';
+      date.textContent = d.date ? 'Sold ' + fmtDate(d.date) : '';
+    }
+
+    const items = d.items || [];
+    // An animal count the disclosure supports: the animal blocks it returned,
+    // or the per-line count for carcass lines that trace back to several.
+    const counted = animals.length ||
+      items.reduce((n, it) => n + (Number(it.animal_count) || 0), 0);
+    document.getElementById('count').textContent =
+      counted ? `${counted} ${plural(counted,'animal','animals')}` : '';
+
+    // Only claim birth-to-sale when every disclosed animal was born here.
+    const allBorn = animals.length > 0 &&
+      animals.every(a => a.origin === 'born_on_farm');
+    document.getElementById('scope').textContent =
+      allBorn ? 'Traceable from birth to sale' : '';
+
+    const weighed = items.filter(it => it.weight_kg != null);
+    const total = weighed.reduce((s, it) => s + Number(it.weight_kg), 0);
+    const anyCarcass = items.some(it => it.kind === 'carcass');
+    const allCarcass = items.length > 0 && items.every(it => it.kind === 'carcass');
+    document.getElementById('kg').textContent = weighed.length ? kg(total) : '';
+    // The big number always says what it measures.
+    document.getElementById('kglabel').textContent = !weighed.length ? ''
+      : preview ? 'Latest live weight'
+      : allCarcass ? 'Carcass weight at sale'
+      : anyCarcass ? 'Total weight at sale'
+      : 'Live weight at sale';
+
+    // Two differently sourced weights are explained, never left to look like a
+    // discrepancy.
+    const note = document.getElementById('weight-note');
+    const mixes = anyCarcass && animals.some(a => a.final_weight_kg != null);
+    note.textContent = mixes
+      ? 'Bought weight is the live weight recorded at purchase; carcass weight ' +
+        'is recorded after processing. They are different measures, so they are ' +
+        'not expected to match.'
+      : '';
+    note.classList.toggle('hidden', !mixes);
+  }
+
+  // ---- the withdrawal statement ---------------------------------------
+  // THE DECISION IS THE SERVER'S. This reads `withdrawal.state` and formats it.
+  // It never inspects the medication list to reach a verdict: the list can be
+  // a subset of what the server evaluated, and a food-safety claim assembled
+  // from whatever happened to render is not evidence.
+  function renderVerdict(d, animals) {
+    const host = document.getElementById('verdict');
+    const w = d.withdrawal || {};
+    const state = w.state;
+    const many = animals.length > 1;
+    const subject = many ? 'these animals were' : 'this animal was';
+    const when = d.kind === 'preview' ? '' :
+      (d.date ? ` on ${fmtDate(d.date)}` : '');
+    let cls, icon, ttl, sub;
+
+    if (state === 'cleared') {
+      cls = 'ok'; icon = '✓';
+      ttl = 'Medicine withdrawal cleared';
+      sub = d.kind === 'preview'
+        ? `All recorded withdrawal periods had ended by ${fmtDate(d.date)}.`
+        : `All recorded withdrawal periods had ended before ${subject} sold${when}.`;
+    } else if (state === 'active') {
+      cls = 'hold'; icon = '!';
+      ttl = 'Withdrawal period not ended';
+      sub = `Farm records show a medicine withdrawal that had not ended${when}. ` +
+            `Contact the farm using the details above.`;
+    } else if (state === 'unknown') {
+      cls = 'hold'; icon = '?';
+      ttl = 'Withdrawal not confirmed';
+      sub = 'A treatment is recorded without the date its withdrawal ended, so ' +
+            'this record cannot confirm that every period had ended.';
+    } else {
+      // none_recorded — say what is true, which is that nothing was found.
+      host.innerHTML = '';
+      return;
+    }
+    host.innerHTML = `<div class="verdict ${cls}" role="status">
+      <span class="dot" aria-hidden="true">${icon}</span>
+      <span><span class="ttl">${esc(ttl)}</span>
+      <span class="sub">${esc(sub)}</span></span></div>`;
+  }
+
+  // ---- one animal ------------------------------------------------------
   function originLine(a) {
     if (a.origin === 'born_on_farm')
-      return 'Born on farm' + (a.born_on ? ' · ' + fmtDate(a.born_on) : '');
-    if (a.origin === 'purchased') return 'Purchased and finished on this farm';
+      return 'Born on this farm' + (a.born_on ? ' · ' + fmtDate(a.born_on) : '');
+    if (a.origin === 'purchased') return 'Purchased and raised on this farm';
     return '';
   }
 
-  function healthChip(h) {
-    if (!h) return '';
-    const label = {healthy:'Healthy', under_treatment:'Under treatment',
-                   not_fit_for_consumption:'Not fit for consumption'}[h] || h;
-    const cls = h === 'healthy' ? 'ok' : 'warn';
-    return `<span class="chip ${cls}">${esc(label)}</span>`;
+  function ageLine(a) {
+    if (a.days_on_farm == null) return null;
+    const n = a.days_on_farm;
+    // Born here: the days ARE its age. Arrived later: they are not, and saying
+    // so would invent a birth date the record does not have.
+    return a.origin === 'born_on_farm'
+      ? ['Age at sale', `${n} ${plural(n,'day','days')}`]
+      : ['Time on this farm', `${n} ${plural(n,'day','days')}`];
   }
 
-  function renderAnimal(a) {
-    const feed = (a.feed || []).map(f => esc(f.name)).filter(Boolean);
-    const meds = a.medications || [];
-    const rows = [];
-
-    const origin = originLine(a);
-    if (origin) rows.push(['Origin', esc(origin)]);
-    if (a.days_on_farm != null)
-      rows.push(['Days on farm', `${a.days_on_farm} days`]);
-    if (a.final_weight_kg != null)
-      rows.push(['Live weight', `${Number(a.final_weight_kg).toFixed(1)} kg`]);
-    if (feed.length)
-      rows.push(['Feed', feed.join(' · ')]);
-
-    // medication — the record that demonstrates control rather than asserting it
-    let medHtml;
-    if (meds.length) {
-      medHtml = '<div class="meds">' + meds.map(m =>
-        `<div class="med">${esc(m.name)}` +
-        (m.given_on ? ` <span class="w">· given ${fmtDate(m.given_on)}` +
-          (m.withdrawal_until ? `, withdrawal cleared ${fmtDate(m.withdrawal_until)}` : '') +
-          `</span>` : '') + `</div>`).join('') + '</div>';
-    } else {
-      medHtml = '<div class="clean">No medication administered</div>';
+  function feedSection(a, idx) {
+    const feed = (a.feed || []).filter(f => f && f.name);
+    const id = `feed-${idx}`;
+    if (!feed.length) {
+      return `<div class="sect"><h3>Feeds recorded</h3>
+        <div class="note">No feed records available for this period.</div></div>`;
     }
-    rows.push(['Medication', medHtml]);
+    const items = feed.map(f =>
+      `<li>${esc(f.name)}${f.stage ? ` <span class="stage">· ${esc(f.stage)}</span>` : ''}</li>`
+    ).join('');
+    return `<div class="sect" style="padding-top:0">
+      <button class="feedbtn" type="button" aria-expanded="false" aria-controls="${id}">
+        <span class="txt"><h3>Feeds recorded</h3>
+          <span class="note">${feed.length} ${plural(feed.length,'feed','feeds')} while on the farm</span>
+        </span><span class="chev" aria-hidden="true">⌄</span>
+      </button>
+      <ul class="feedlist hidden" id="${id}">${items}</ul></div>`;
+  }
 
+  const MED_VISIBLE = 4;
+
+  function medRow(m) {
+    const when = [];
+    if (m.given_on) when.push(`Given ${fmtDate(m.given_on)}`);
+    // A missing withdrawal date is NOT a cleared one, and must not read like it.
+    if (m.withdrawal_until) {
+      when.push(`<span class="cleared">✓ Withdrawal ended ${fmtDate(m.withdrawal_until)}</span>`);
+    } else {
+      when.push(`<span class="open">Withdrawal end not recorded</span>`);
+    }
+    return `<div class="med"><div class="nm">${esc(m.name || 'Treatment')}</div>
+      <div class="when">${when.join(' · ')}</div></div>`;
+  }
+
+  function medSection(a, idx) {
+    const meds = (a.medications || []);
+    const state = (a.withdrawal || {}).state;
+    if (!meds.length) {
+      return `<div class="sect"><h3>Medication and withdrawal history</h3>
+        <div class="note empty" style="margin-top:6px">No medication records were
+        found for this animal before sale.</div></div>`;
+    }
+    // NO VERDICT, NO SENTENCE. A server that predates the withdrawal verdict
+    // sends no `withdrawal` at all, and this page deploys before the migration
+    // that adds it - the mirror publishes on push, the migration waits for CI.
+    // Falling through to "one or more treatments have no recorded withdrawal
+    // end" would have said that, untruthfully, about every animal in between.
+    // The rows below still carry each treatment's own dates.
+    const note = state === 'cleared'
+      ? 'All recorded withdrawal periods ended before sale.'
+      : state === 'active'
+        ? 'A recorded withdrawal period had not ended at sale.'
+        : state === 'unknown'
+          ? 'One or more treatments have no recorded withdrawal end.'
+          : '';
+    // Server order is newest first (0273). Four or fewer: show them all.
+    const head = meds.slice(0, MED_VISIBLE).map(medRow).join('');
+    const rest = meds.slice(MED_VISIBLE);
+    const id = `meds-${idx}`;
+    const more = rest.length
+      ? `<div class="hidden" id="${id}">${rest.map(medRow).join('')}</div>
+         <button class="more" type="button" aria-expanded="false" aria-controls="${id}"
+           data-count="${meds.length}">View all ${meds.length} treatments</button>`
+      : '';
+    return `<div class="sect"><h3>Medication and withdrawal history</h3>
+      ${note ? `<div class="note">${esc(note)}</div>` : ''}
+      <div style="margin-top:8px">${head}</div>${more}</div>`;
+  }
+
+  function renderAnimal(a, idx) {
     const meta = [a.breed, a.sex].filter(Boolean).map(esc).join(' · ');
+    const facts = [];
+    const origin = originLine(a);
+    if (origin) facts.push(['Origin', esc(origin)]);
+    const age = ageLine(a);
+    if (age) facts.push([age[0], esc(age[1])]);
     return `<div class="animal">
-      <div class="top">
-        <div>
-          <div class="tag">${esc(a.tag || 'Animal')}</div>
-          ${a.current_tag ? `<div style="color:var(--muted);font-size:12px;margin-top:2px">now tagged <b style="color:var(--ink)">${esc(a.current_tag)}</b></div>` : ''}
-          ${meta ? `<div class="kind">${meta}</div>` : ''}
-        </div>
-        ${healthChip(a.health)}
-      </div>
-      <div class="rows">
-        ${rows.map(([k,v]) => `<div class="row"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}
-      </div>
+      <div class="tag">${esc(a.tag || 'Animal')}</div>
+      ${a.current_tag ? `<div class="retag">Now tagged ${esc(a.current_tag)}</div>` : ''}
+      ${meta ? `<div class="kind">${meta}</div>` : ''}
+      ${facts.length ? `<div class="facts">${facts.map(([k,v]) =>
+        `<div class="fact"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`
+      ).join('')}</div>` : ''}
+      ${feedSection(a, idx)}
+      ${medSection(a, idx)}
     </div>`;
   }
 
-  function renderItem(it) {
-    const sub = [];
-    if (it.batch_refs && it.batch_refs.length) sub.push('Batch ' + it.batch_refs.map(esc).join(', '));
-    if (it.animal_count) sub.push(it.animal_count === 1 ? '1 animal' : `${it.animal_count} animals`);
-    const wt = it.weight_kg != null ? `${Number(it.weight_kg).toFixed(1)} kg` : '';
-    // Only name carcass weight when the disclosure says that explicitly.
-    // Older payloads called any animal-linked line "live", even for a carcass
-    // sale, so leaving those unlabelled is safer during a staggered deploy.
-    const measure = it.kind === 'carcass' && wt ? 'carcass weight' : '';
-    return `<div class="item">
-      <div>
-        <div class="nm">${esc(it.label)}</div>
-        ${sub.length ? `<div class="sub">${sub.join(' · ')}</div>` : ''}
-      </div>
-      <div class="wt">${wt}${measure ? `<span class="measure">${measure}</span>` : ''}</div>
-    </div>`;
+  // ---- provenance ------------------------------------------------------
+  function renderRaised(d, animals) {
+    const card = document.getElementById('raised-card');
+    const farm = d.farm || 'this farm';
+    const many = animals.length > 1;
+    document.getElementById('raised-title').textContent =
+      many ? 'How these animals were raised' : 'How this animal was raised';
+    // Prefer the server's own evidence-method sentence; it knows which records
+    // actually exist. Without one there is no claim to make.
+    if (!d.method) { card.classList.add('hidden'); return; }
+    card.classList.remove('hidden');
+    const subject = many
+      ? `${esc(farm)} recorded these animals’ weight, feed and health treatments while they were on the farm.`
+      : `${esc(farm)} recorded this animal’s weight, feed and health treatments while it was on the farm.`;
+    document.getElementById('raised').innerHTML =
+      `<p>${subject}</p><p>${esc(d.method)}</p>` +
+      `<p>The information shown here comes from records maintained by ${esc(farm)}.</p>`;
   }
+
+  // ---- expansion -------------------------------------------------------
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[aria-controls]');
+    if (!btn) return;
+    const panel = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!panel) return;
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    panel.classList.toggle('hidden', open);
+    if (btn.classList.contains('more')) {
+      const n = btn.dataset.count;
+      btn.textContent = open ? `View all ${n} treatments` : 'Show fewer treatments';
+    }
+  });
 
   function render(d) {
-    document.getElementById('ref').textContent = d.reference || (d.kind === 'batch' ? 'Batch' : 'Record');
-    document.getElementById('date').textContent = fmtDate(d.date);
-    // No sentence means the records do not support one — hide the panel rather
-    // than leave an empty card implying something was withheld.
-    document.getElementById('method').textContent = d.method || '';
-    document.querySelector('.card.method').style.display = d.method ? '' : 'none';
-    // The seller names itself or is not named. There is no house default: this
-    // page serves every farm on the platform, and printing one farm's identity
-    // on another's record is the fault this replaced.
-    const farm = d.farm || '';
-    document.getElementById('farm').textContent = farm;
-    document.getElementById('farm-head').textContent = farm;
-    if (farm) document.title = farm + ' — Traceability record';
-    const contact = [d.farm_address, d.farm_phone, d.farm_email]
-      .filter(Boolean).join(' · ');
-    document.getElementById('farm-contact').textContent = contact;
-    // Only claim record-keeping when the server found records to back it.
-    document.getElementById('farm-claim').textContent = d.method
-      ? 'Every claim here is backed by records ' + (farm || 'this farm') + ' keeps.'
-      : '';
-    document.getElementById('items-title').textContent =
-      d.kind === 'batch' ? 'Cuts in this batch' : 'What you bought';
-    const items = d.items || [];
     const animals = d.animals || [];
-    document.getElementById('items').innerHTML =
-      items.map(renderItem).join('') || '<div class="item"><div class="nm">—</div></div>';
-    const weightNote = document.getElementById('weight-note');
-    const comparesCarcassWithLive =
-      items.some(it => it.kind === 'carcass' && it.weight_kg != null) &&
-      animals.some(a => a.final_weight_kg != null);
-    weightNote.textContent = comparesCarcassWithLive
-      ? 'Carcass weight and animal live weight are different measures, so the figures are not expected to match.'
-      : '';
-    weightNote.classList.toggle('hidden', !comparesCarcassWithLive);
+    renderHeader(d);
+    renderSummary(d, animals);
+    renderVerdict(d, animals);
+    document.getElementById('animals-title').textContent =
+      animals.length > 1 ? 'The animals' : 'The animal';
     document.getElementById('animals').innerHTML =
       animals.map(renderAnimal).join('') ||
       // Roughly a hundred invoices went out carrying a QR before the app
@@ -267,14 +561,19 @@
       // codes are in customers' hands and cannot be recalled, so this says what
       // is true rather than showing a bare "No animal records." — which reads,
       // to someone who scanned expecting provenance, like the claim failing.
-      '<div class="clean">Animal-level records were not kept for this sale. ' +
+      '<div class="empty">Animal-level records were not kept for this sale. ' +
       'The purchase details above are what this farm holds for it.</div>';
+    renderRaised(d, animals);
+    document.getElementById('foot').textContent = d.farm
+      ? `Questions about this record? Contact ${d.farm} using the details above.`
+      : '';
     show('record');
   }
 
   async function main() {
     const token = readToken();
     if (!token) { show('notfound'); return; }
+    lastToken = token;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/trace_disclosure`, {
         method: 'POST',
@@ -293,7 +592,7 @@
       show('notfound');
     }
   }
-  main();
+  if (typeof module === 'undefined') main();
 </script>
 </body>
 </html>
