@@ -70,8 +70,6 @@
   .bought .kg{font-size:31px;font-weight:600;color:var(--dark);line-height:1.05;
     font-variant-numeric:tabular-nums}
   .bought .kglabel{font-size:13px;color:var(--muted);margin-top:2px}
-  .weight-note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:12px;
-    padding-top:12px;border-top:1px solid var(--hair)}
 
   /* ---- withdrawal statement ------------------------------------------- */
   /* Word and icon, never colour alone. */
@@ -202,7 +200,6 @@
           <div class="kglabel" id="kglabel"></div>
         </div>
       </div>
-      <p id="weight-note" class="weight-note hidden"></p>
     </div>
 
     <div id="verdict"></div>
@@ -352,17 +349,10 @@
       : allCarcass ? 'Carcass weight at sale'
       : anyCarcass ? 'Total weight at sale'
       : 'Live weight at sale';
-
-    // Two differently sourced weights are explained, never left to look like a
-    // discrepancy.
-    const note = document.getElementById('weight-note');
-    const mixes = anyCarcass && animals.some(a => a.final_weight_kg != null);
-    note.textContent = mixes
-      ? 'Bought weight is the live weight recorded at purchase; carcass weight ' +
-        'is recorded after processing. They are different measures, so they are ' +
-        'not expected to match.'
-      : '';
-    note.classList.toggle('hidden', !mixes);
+    // No live-versus-carcass note. The page shows ONE weight, the sale weight,
+    // labelled with what it measures. An animal's live weight is in the payload
+    // but not drawn, so a note explaining why two figures differ explained a
+    // comparison nobody could see.
   }
 
   // ---- the withdrawal statement ---------------------------------------
