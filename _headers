@@ -1,0 +1,35 @@
+# The traceability site (trace.kihera-farms.com). Netlify applies these to
+# every file it serves from this directory. The page carries a trace token in
+# its path, so it may not be framed, sniffed, indexed or leak its address
+# through a Referer, and it may load only what it uses today:
+#
+#   script-src   the page's one inline script, BY HASH. Edit a single
+#                character of that script and this hash must change with it,
+#                or the browser refuses to run the page at all. CI refuses the
+#                mismatch first (supabase/functions/tests/public_page_headers_test.ts
+#                prints the right value), and the sync workflow deploys only
+#                what CI passed. 'unsafe-inline' sits beside the hash ONLY
+#                for browsers too old to know hashes (CSP level 1, e.g. an
+#                Android 4.4 WebView), which would otherwise refuse the script
+#                outright. Every browser that understands a hash is required
+#                to IGNORE 'unsafe-inline' when one is present, so for them
+#                the hash alone decides.
+#   style-src    'unsafe-inline': the <style> block, and the style="..."
+#                attributes the record's markup carries. A style cannot run
+#                code; every interpolated value is escaped before it is
+#                written (esc()), and the script hash is what stops an
+#                injected <script> or onerror= from running.
+#   font-src     the self-hosted Poppins in fonts/.
+#   connect-src  the Supabase project: trace_disclosure. Nothing else.
+#   img-src      the same project: trace-logo answers with a redirect to a
+#                signed Storage URL on that origin.
+#
+# The farm's phone and email are tel: and mailto: links, which are
+# navigations, not loads, and no directive governs them.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-fdriLGyJTUqYYcaigqnnAXoQlJLgMWiN41UTWYPWL6A=' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; connect-src https://eexgyyzsycdscfjkqaxu.supabase.co; img-src https://eexgyyzsycdscfjkqaxu.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  X-Robots-Tag: noindex, nofollow
