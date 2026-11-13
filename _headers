@@ -19,7 +19,7 @@
 #                code; every interpolated value is escaped before it is
 #                written (esc()), and the script hash is what stops an
 #                injected <script> or onerror= from running.
-#   font-src     the self-hosted Poppins in fonts/.
+#   font-src     the self-hosted Lato in fonts/.
 #   connect-src  the Supabase project: trace_disclosure. Nothing else.
 #   img-src      the same project: trace-logo answers with a redirect to a
 #                signed Storage URL on that origin.
