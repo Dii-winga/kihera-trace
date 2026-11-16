@@ -20,14 +20,15 @@
 #                written (esc()), and the script hash is what stops an
 #                injected <script> or onerror= from running.
 #   font-src     the self-hosted Lato in fonts/.
-#   connect-src  the Supabase project: trace_disclosure. Nothing else.
+#   connect-src  the Supabase project: trace_disclosure, and the trace-ask
+#                function for a buyer's question (0660). Nothing else.
 #   img-src      the same project: trace-logo answers with a redirect to a
 #                signed Storage URL on that origin.
 #
 # The farm's phone and email are tel: and mailto: links, which are
 # navigations, not loads, and no directive governs them.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'sha256-fdriLGyJTUqYYcaigqnnAXoQlJLgMWiN41UTWYPWL6A=' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; connect-src https://eexgyyzsycdscfjkqaxu.supabase.co; img-src https://eexgyyzsycdscfjkqaxu.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-Xuhbg01hK7jdrRL8TXeUmf05G8wse+rPdUtLX7hsRf8=' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; connect-src https://eexgyyzsycdscfjkqaxu.supabase.co; img-src https://eexgyyzsycdscfjkqaxu.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer

@@ -140,6 +140,55 @@
   .feedlist{display:grid;gap:8px;padding-bottom:4px}
   .feedlist li{list-style:none;font-size:14px;color:var(--ink)}
   .feedlist .stage{color:var(--muted);font-size:12.5px}
+  .feedlist .made{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+  .med .kind{display:inline-block;font-size:11.5px;font-weight:600;color:var(--dark);
+    background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:0 8px;
+    margin-left:6px;vertical-align:1px}
+
+  /* ---- the buyer's question box (0660) ---------------------------------- */
+  /* On a computer the record keeps its reading width and the questions sit
+     beside it; on a phone they follow the verdict, as the mockup drew. */
+  .cols{display:block}
+  .cols > .side{min-width:0}
+  @media (min-width:960px){
+    .wrap.asking{max-width:1000px}
+    .wrap.asking .cols{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);
+      gap:24px;align-items:start}
+    .wrap.asking .cols > .side{position:sticky;top:16px}
+  }
+  .ask{background:#fff;border:2px solid var(--lime-deep);border-radius:14px;padding:18px;margin-top:14px}
+  .ask h2{font-size:17px;font-weight:700;color:var(--dark);text-transform:none;letter-spacing:0;margin:0}
+  .ask .lead{font-size:13.5px;color:var(--muted);margin:4px 0 14px}
+  .ask .chip{display:inline-block;border:1px solid #CFE9B4;background:var(--lime-tint);color:#2E5E10;
+    border-radius:20px;padding:10px 14px;font:inherit;font-size:14px;margin:0 6px 8px 0;min-height:44px;
+    cursor:pointer;text-align:left}
+  .ask .chip:hover{background:#DDF0C9}
+  .ask .chip:disabled{opacity:.55;cursor:default}
+  .ask label{display:block;font-size:13px;font-weight:600;margin-top:14px}
+  .ask .row{display:flex;gap:8px;margin-top:6px}
+  .ask input{flex:1;min-width:0;border:1px solid var(--faint);border-radius:10px;padding:12px;
+    font:inherit;font-size:16px;min-height:48px;background:#fff;color:var(--ink)}
+  .ask .send{flex:0 0 48px;height:48px;border:0;border-radius:10px;background:var(--lime-deep);
+    color:#fff;font-size:20px;cursor:pointer}
+  .ask .send:disabled{opacity:.5;cursor:default}
+  .ask .turn{display:flex;flex-direction:column;gap:10px;margin-top:14px;border-top:1px solid var(--hair);padding-top:14px}
+  .ask .q{align-self:flex-end;background:var(--dark);color:#fff;border-radius:14px 14px 4px 14px;
+    padding:10px 14px;font-size:15px;max-width:85%;overflow-wrap:anywhere}
+  .ask .a{font-size:15.5px;overflow-wrap:anywhere}
+  .ask .no{display:flex;gap:10px;background:var(--bg);border:1px solid var(--hair);border-radius:12px;
+    padding:12px;font-size:15px}
+  .ask .facts{border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+  .ask .facts .t{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:8px 12px;background:var(--bg)}
+  .ask .fr{display:flex;gap:10px;padding:8px 12px;border-top:1px solid var(--hair);font-size:13.5px}
+  .ask .fr .k{flex:0 0 42%;color:var(--muted);overflow-wrap:anywhere}
+  .ask .fr .v{min-width:0;overflow-wrap:anywhere}
+  .ask .call{align-self:flex-start;border:1px solid #CFE9B4;background:var(--lime-tint);color:#2E5E10;
+    border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;text-decoration:none}
+  .ask .wait{color:var(--muted);font-style:italic;margin-top:14px;font-size:14px}
+  .ask .fine{font-size:12px;color:var(--muted);margin-top:10px}
+  .ask .retry{border:0;background:none;color:var(--lime-deep);font:inherit;font-weight:700;cursor:pointer;padding:0}
+
 
   /* medication: never behind a collapsed control */
   .med{padding:12px 0;border-bottom:1px solid var(--hair)}
@@ -171,7 +220,7 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="page">
 
   <div id="loading" class="state">
     <div class="spinner"></div>
@@ -199,6 +248,7 @@
       recorded.
     </div>
 
+    <div class="cols"><div class="main">
     <div class="card" id="summary">
       <h2 id="summary-title">What you bought</h2>
       <div class="saleline">
@@ -219,6 +269,8 @@
 
     <div id="verdict"></div>
 
+    <div id="ask-phone"></div>
+
     <div class="card">
       <h2 id="animals-title">The animal</h2>
       <div id="animals"></div>
@@ -228,6 +280,7 @@
       <h2 id="raised-title">How this animal was raised</h2>
       <div id="raised"></div>
     </div>
+    </div><div class="side" id="ask-side"></div></div>
 
     <footer id="foot"></footer>
   </div>
@@ -420,14 +473,37 @@
     return '';
   }
 
+  // Days on the farm up to the record's date, as calendar months and days:
+  // 224 days to 12 Nov 2026 is "7 months 10 days" (owner, 2026-11-16). The
+  // same rule as supabase/functions/trace-ask/record.ts.
+  function monthsAndDays(endIso, days) {
+    const end = new Date(String(endIso || '').slice(0,10) + 'T00:00:00Z');
+    if (isNaN(end) || !(days >= 0)) return `${days} ${plural(days,'day','days')}`;
+    const start = new Date(end.getTime() - Math.round(days) * 86400000);
+    const addM = (d, n) => {
+      const y = d.getUTCFullYear(), m = d.getUTCMonth() + n, day = d.getUTCDate();
+      const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      return new Date(Date.UTC(y, m, Math.min(day, last)));
+    };
+    let m = (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + end.getUTCMonth() - start.getUTCMonth();
+    let anchor = addM(start, m);
+    if (anchor > end) { m -= 1; anchor = addM(start, m); }
+    const d = Math.round((end - anchor) / 86400000);
+    const parts = [];
+    if (m > 0) parts.push(`${m} ${plural(m,'month','months')}`);
+    if (d > 0 || m === 0) parts.push(`${d} ${plural(d,'day','days')}`);
+    return parts.join(' ');
+  }
+
+  let recordDate = '';
   function ageLine(a) {
     if (a.days_on_farm == null) return null;
     const n = a.days_on_farm;
     // Born here: the days ARE its age. Arrived later: they are not, and saying
     // so would invent a birth date the record does not have.
     return a.origin === 'born_on_farm'
-      ? ['Age at sale', `${n} ${plural(n,'day','days')}`]
-      : ['Time on this farm', `${n} ${plural(n,'day','days')}`];
+      ? ['Age at sale', monthsAndDays(recordDate, n)]
+      : ['Time on this farm', monthsAndDays(recordDate, n)];
   }
 
   function feedSection(a, idx) {
@@ -437,8 +513,12 @@
       return `<div class="sect"><h3>Feeds recorded</h3>
         <div class="note">No feed records available for this period.</div></div>`;
     }
+    // 0661: what each feed was made from, names only, alphabetical.
+    const made = f => (f.ingredients || []).filter(Boolean).length
+      ? `<span class="made">Made from ${esc(f.ingredients.filter(Boolean).join(', ').toLowerCase())}</span>`
+      : '';
     const items = feed.map(f =>
-      `<li>${esc(f.name)}${f.stage ? ` <span class="stage">· ${esc(f.stage)}</span>` : ''}</li>`
+      `<li>${esc(f.name)}${f.stage ? ` <span class="stage">· ${esc(f.stage)}</span>` : ''}${made(f)}</li>`
     ).join('');
     return `<div class="sect" style="padding-top:0">
       <button class="feedbtn" type="button" aria-expanded="false" aria-controls="${id}">
@@ -460,7 +540,9 @@
     } else {
       when.push(`<span class="open">Withdrawal end not recorded</span>`);
     }
-    return `<div class="med"><div class="nm">${esc(m.name || 'Treatment')}</div>
+    // 0661: the farm's own mark on its medicine list. No mark, no word.
+    const kind = m.antibiotic === true ? '<span class="kind">Antibiotic</span>' : '';
+    return `<div class="med"><div class="nm">${esc(m.name || 'Treatment')}${kind}</div>
       <div class="when">${when.join(' · ')}</div></div>`;
   }
 
@@ -552,8 +634,138 @@
     }
   });
 
+  // ---- the buyer asks (0660) ---------------------------------------------
+  // Shown only when the farm takes questions (`ask`), which an older server
+  // never sends. Suggested questions are fixed words from this record; a
+  // typed one is answered from this record alone. Every reply is drawn from
+  // what the function returned, escaped, never as HTML.
+  const CHIPS = [
+    ['medicines', 'Was it ever given antibiotics?'],
+    ['age', 'How old was it?'],
+    ['where', 'Where was it raised?'],
+    ['fed', 'What was it fed?'],
+  ];
+  const ask = { on: false, phone: '', thread: [], busy: false, text: '', stop: '', failed: null, many: false };
+
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16)));
+
+  const wide = () => typeof matchMedia === 'function' && matchMedia('(min-width:960px)').matches;
+  function askHost() {
+    return wide()
+      ? document.getElementById('ask-side') : document.getElementById('ask-phone');
+  }
+
+  function turnHtml(t) {
+    const facts = (t.facts || []).length
+      ? `<div class="facts"><div class="t">Taken from this record</div>${t.facts.map(f =>
+          `<div class="fr"><span class="k">${esc(f.k)}</span><span class="v">${esc(f.v)}</span></div>`).join('')}</div>`
+      : '';
+    const body = t.kind === 'not_shared'
+      ? `<div class="no"><span aria-hidden="true">🔒</span><span>${esc(t.sentence)}</span></div>`
+      : `<div class="a">${esc(t.sentence)}</div>`;
+    const call = t.call && ask.phone
+      ? `<a class="call" href="tel:${esc(ask.phone.replace(/[^0-9+]/g, ''))}">Call the farm · ${esc(ask.phone)}</a>`
+      : '';
+    return `<div class="turn"><div class="q">${esc(t.question)}</div>${body}${facts}${call}</div>`;
+  }
+
+  function drawAsk() {
+    const hostA = document.getElementById('ask-side'), hostB = document.getElementById('ask-phone');
+    hostA.innerHTML = ''; hostB.innerHTML = '';
+    if (!ask.on) return;
+    const entry = ask.stop
+      ? `<div class="no" style="margin-top:14px"><span>${esc(ask.stop)}</span></div>`
+      : `${ask.failed ? `<div class="no" style="margin-top:14px"><span>Could not get an answer just now. Your question was not counted.
+            <button type="button" class="retry" id="ask-retry">Try again</button></span></div>` : ''}
+         <label for="ask-q">${ask.thread.length ? 'Ask another question' : 'Or type your own question'}</label>
+         <div class="row"><input id="ask-q" type="text" maxlength="300" autocomplete="off"
+             placeholder="Where was it born?" value="${esc(ask.text)}" ${ask.busy ? 'disabled' : ''}>
+           <button type="button" class="send" id="ask-send" aria-label="Ask" ${ask.busy ? 'disabled' : ''}>→</button></div>`;
+    askHost().innerHTML = `<section class="ask" aria-labelledby="ask-h">
+      <h2 id="ask-h">${ask.many ? 'Ask about these animals' : 'Ask about this animal'}</h2>
+      <p class="lead">Answers come only from this record. Nothing else about the farm is shared.</p>
+      <div>${CHIPS.map(([k, t]) => `<button type="button" class="chip" data-key="${k}" ${ask.busy ? 'disabled' : ''}>${esc(t)}</button>`).join('')}</div>
+      <div aria-live="polite">${ask.thread.map(turnHtml).join('')}
+        ${ask.busy ? '<p class="wait" role="status">Reading this record…</p>' : ''}</div>
+      ${entry}
+      <p class="fine">Answered by a computer reading this record. The record is the full story.</p>
+    </section>`;
+  }
+
+  const STOPS = {
+    rate_limited: 'Please wait a little before asking again. The full record is on this page.',
+    record_limit: 'No more typed questions on this record today. The suggested questions above still work, and the full record is on this page.',
+    farm_limit: 'Typed questions are not available right now. The suggested questions above still work, and the full record is on this page.',
+  };
+
+  async function send(payload, question) {
+    if (ask.busy) return;
+    ask.busy = true; ask.failed = null; drawAsk();
+    let res = null, body = null;
+    try {
+      res = await fetch(SUPABASE_URL + '/functions/v1/trace-ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY,
+                   'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({ token: lastToken, attempt_id: newId(), ...payload }),
+      });
+      body = await res.json().catch(() => null);
+    } catch (e) { res = null; }
+    ask.busy = false;
+    if (res && res.ok && body && body.sentence) {
+      ask.thread.push({ question: body.question || question, sentence: body.sentence,
+                        facts: body.facts || [], call: body.call, kind: body.kind });
+      if (!payload.key) ask.text = '';
+    } else {
+      const code = body && body.error;
+      if (code === 'off' || code === 'not_found') { ask.on = false; }
+      else if (STOPS[code]) { if (payload.key) ask.failed = payload; else ask.stop = STOPS[code]; }
+      else ask.failed = payload;
+    }
+    drawAsk();
+    const f = document.getElementById('ask-q');
+    // The box is drawn afresh, so put the caret after any kept text: a
+    // question typed after a failure must not land in front of the old one.
+    if (f && !payload.key && !ask.busy) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+  }
+
+  async function askTyped() {
+    const q = ask.text.trim();
+    if (!q || ask.busy) return;
+    send({ question: q }, q);
+  }
+
+  document.addEventListener('click', e => {
+    const chip = e.target.closest('.ask .chip');
+    if (chip) {
+      const k = chip.dataset.key;
+      send({ key: k }, (CHIPS.find(c => c[0] === k) || [])[1] || '');
+      return;
+    }
+    if (e.target.closest('#ask-send')) { askTyped(); return; }
+    if (e.target.closest('#ask-retry') && ask.failed) {
+      const p = ask.failed;
+      if (p.key) send({ key: p.key }, ''); else askTyped();
+    }
+  });
+  document.addEventListener('input', e => { if (e.target.id === 'ask-q') ask.text = e.target.value; });
+  document.addEventListener('keydown', e => {
+    if (e.target.id === 'ask-q' && e.key === 'Enter') { e.preventDefault(); askTyped(); }
+  });
+  if (typeof matchMedia === 'function') matchMedia('(min-width:960px)').addEventListener('change', () => drawAsk());
+
+  function renderAsk(d) {
+    ask.on = d.ask === true && !!lastToken;
+    ask.phone = d.farm_phone || '';
+    ask.many = (d.animals || []).length > 1;
+    document.getElementById('page').classList.toggle('asking', ask.on);
+    drawAsk();
+  }
+
   function render(d) {
     const animals = d.animals || [];
+    recordDate = d.date || '';
     renderHeader(d);
     renderSummary(d, animals);
     renderVerdict(d, animals);
@@ -569,6 +781,7 @@
       '<div class="empty">Animal-level records were not kept for this sale. ' +
       'The purchase details above are what this farm holds for it.</div>';
     renderRaised(d, animals);
+    renderAsk(d);
     document.getElementById('foot').textContent = d.farm
       ? `Questions about this record? Contact ${d.farm} using the details above.`
       : '';
