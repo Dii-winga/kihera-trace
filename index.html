@@ -125,22 +125,6 @@
   .sect h3{font-size:15px;font-weight:600;color:var(--ink)}
   .sect .note{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.55}
 
-  /* feeds: progressive disclosure, a real button */
-  .feedbtn{width:100%;background:none;border:none;padding:14px 0;margin:0;
-    font:inherit;color:inherit;text-align:left;cursor:pointer;display:flex;
-    align-items:center;gap:12px;min-height:48px}
-  .feedbtn .txt{flex:1;min-width:0}
-  .feedbtn h3{font-size:15px;font-weight:600}
-  .feedbtn .chev{flex:0 0 auto;color:var(--muted);font-size:13px;
-    transition:transform .18s ease}
-  .feedbtn[aria-expanded="true"] .chev{transform:rotate(180deg)}
-  .feedbtn:focus-visible{outline:2px solid var(--lime-deep);outline-offset:3px;
-    border-radius:6px}
-  @media (prefers-reduced-motion:reduce){.feedbtn .chev{transition:none}}
-  .feedlist{display:grid;gap:8px;padding-bottom:4px}
-  .feedlist li{list-style:none;font-size:14px;color:var(--ink)}
-  .feedlist .stage{color:var(--muted);font-size:12.5px}
-  .feedlist .made{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
   .med .kind{display:inline-block;font-size:11.5px;font-weight:600;color:var(--dark);
     background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:0 8px;
     margin-left:6px;vertical-align:1px}
@@ -177,7 +161,23 @@
   .ask .a{font-size:15.5px;overflow-wrap:anywhere}
   .ask .no{display:flex;gap:10px;background:var(--bg);border:1px solid var(--hair);border-radius:12px;
     padding:12px;font-size:15px}
-  .ask .facts{border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+  /* 0720: a block, not the record's grid: the grid's gap drew an empty band
+     under the heading on every answer. */
+  .ask .facts{display:block;margin-top:0;border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+  .ask .a b{font-weight:700;color:var(--dark)}
+  .ask .fr.grp{width:100%;background:#fff;border:0;border-top:1px solid var(--hair);font:inherit;
+    color:inherit;text-align:left;cursor:pointer;align-items:center;min-height:48px}
+  .ask .fr.grp .k{flex:1;color:var(--ink)}
+  .ask .fr.grp small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+  .ask .fr.grp .show{flex:0 0 auto;color:var(--lime-deep);font-weight:700;font-size:13px}
+  .ask .fr.grp:focus-visible{outline:2px solid var(--lime-deep);outline-offset:-2px}
+  .ask .sub{background:var(--bg)}
+  .ask .sub .fr{padding-left:24px}
+  .abtag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:10px;padding:0 8px;
+    margin-left:6px;vertical-align:1px;border:1px solid var(--hair);white-space:nowrap}
+  .abtag.ab-yes{background:var(--warn-tint);color:var(--warn);border-color:#EBD79B}
+  .abtag.ab-no{background:var(--lime-tint);color:#2E5E10;border-color:#CFE9B4}
+  .abtag.ab-unk{background:var(--bg);color:var(--muted)}
   .ask .facts .t{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);
     font-weight:700;padding:8px 12px;background:var(--bg)}
   .ask .fr{display:flex;gap:10px;padding:8px 12px;border-top:1px solid var(--hair);font-size:13.5px}
@@ -506,27 +506,32 @@
       : ['Time on this farm', monthsAndDays(recordDate, n)];
   }
 
-  function feedSection(a, idx) {
-    const feed = (a.feed || []).filter(f => f && f.name);
-    const id = `feed-${idx}`;
-    if (!feed.length) {
-      return `<div class="sect"><h3>Feeds recorded</h3>
-        <div class="note">No feed records available for this period.</div></div>`;
+  // 0720: buyers see what the feed was made from, never the farm's feed
+  // products or recipes (owner, 2026-11-17). A server from before 0720 sends
+  // `feed` (products with their ingredients): only the ingredients are read.
+  function fedAndIngredients(a) {
+    if (Array.isArray(a.ingredients) || typeof a.fed === 'boolean') {
+      return { fed: a.fed === true, ingredients: [...new Set((a.ingredients || []).filter(Boolean))] };
     }
-    // 0661: what each feed was made from, names only, alphabetical.
-    const made = f => (f.ingredients || []).filter(Boolean).length
-      ? `<span class="made">Made from ${esc(f.ingredients.filter(Boolean).join(', ').toLowerCase())}</span>`
-      : '';
-    const items = feed.map(f =>
-      `<li>${esc(f.name)}${f.stage ? ` <span class="stage">· ${esc(f.stage)}</span>` : ''}${made(f)}</li>`
-    ).join('');
-    return `<div class="sect" style="padding-top:0">
-      <button class="feedbtn" type="button" aria-expanded="false" aria-controls="${id}">
-        <span class="txt"><h3>Feeds recorded</h3>
-          <span class="note">${feed.length} ${plural(feed.length,'feed','feeds')} while on the farm</span>
-        </span><span class="chev" aria-hidden="true">⌄</span>
-      </button>
-      <ul class="feedlist hidden" id="${id}">${items}</ul></div>`;
+    const feed = (a.feed || []).filter(f => f && f.name);
+    return { fed: feed.length > 0,
+             ingredients: [...new Set(feed.flatMap(f => (f.ingredients || []).filter(Boolean)))] };
+  }
+
+  function feedSection(a) {
+    const { fed, ingredients } = fedAndIngredients(a);
+    const sorted = ingredients.slice().sort((x, y) => x.localeCompare(y));
+    const note = !fed
+      ? 'No feed records available for this period.'
+      : sorted.length
+        ? `Made from ${listed(sorted)}.`
+        : 'Feeding is recorded, but not what the feed was made from.';
+    return `<div class="sect"><h3>Feed</h3><div class="note">${esc(note)}</div></div>`;
+  }
+
+  // "a, b and c", names as the farm writes them.
+  function listed(xs) {
+    return xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1];
   }
 
   const MED_VISIBLE = 4;
@@ -595,7 +600,7 @@
       ${facts.length ? `<div class="facts">${facts.map(([k,v]) =>
         `<div class="fact"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`
       ).join('')}</div>` : ''}
-      ${feedSection(a, idx)}
+      ${feedSection(a)}
       ${medSection(a, idx)}
     </div>`;
   }
@@ -628,6 +633,10 @@
     const open = btn.getAttribute('aria-expanded') === 'true';
     btn.setAttribute('aria-expanded', String(!open));
     panel.classList.toggle('hidden', open);
+    if (btn.classList.contains('grp')) {
+      const lbl = btn.querySelector('.show');
+      if (lbl) lbl.textContent = open ? 'Show' : 'Hide';
+    }
     if (btn.classList.contains('more')) {
       const n = btn.dataset.count;
       btn.textContent = open ? `View all ${n} treatments` : 'Show fewer treatments';
@@ -656,14 +665,38 @@
       ? document.getElementById('ask-side') : document.getElementById('ask-phone');
   }
 
+  // 0720: an answer's bold part, its evidence rows with the farm's
+  // antibiotic mark, and each medicine's doses behind Show.
+  // Prefixed: `.ask .no` is the not-shared answer's box, and a bare `no` here
+  // drew the tag as that box (found walking the page, 2026-11-17).
+  const MARKS = { yes: ['ab-yes', 'Antibiotic'], no: ['ab-no', 'Not an antibiotic'], unsaid: ['ab-unk', 'Not said'] };
+  let rowSeq = 0;
+  function factRow(f) {
+    const mark = MARKS[f.mark] ? `<span class="abtag ${MARKS[f.mark][0]}">${MARKS[f.mark][1]}</span>` : '';
+    const rows = Array.isArray(f.rows) ? f.rows.filter(r => r && r.k) : [];
+    if (!rows.length) {
+      return `<div class="fr"><span class="k">${esc(f.k)}${mark}</span><span class="v">${esc(f.v)}</span></div>`;
+    }
+    const id = `ev-${++rowSeq}`;
+    return `<button type="button" class="fr grp" aria-expanded="false" aria-controls="${id}">
+        <span class="k"><b>${esc(f.k)}</b>${mark}<small>${esc(f.v)}</small></span>
+        <span class="show" aria-hidden="true">Show</span></button>
+      <div class="sub hidden" id="${id}">${rows.map(r =>
+        `<div class="fr"><span class="k">${esc(r.k)}</span><span class="v">${esc(r.v)}</span></div>`).join('')}</div>`;
+  }
+  function sentenceHtml(t) {
+    const s = String(t.sentence || '');
+    const b = typeof t.bold === 'string' ? t.bold : '';
+    const at = b ? s.indexOf(b) : -1;
+    return at < 0 ? esc(s) : esc(s.slice(0, at)) + '<b>' + esc(b) + '</b>' + esc(s.slice(at + b.length));
+  }
   function turnHtml(t) {
-    const facts = (t.facts || []).length
-      ? `<div class="facts"><div class="t">Taken from this record</div>${t.facts.map(f =>
-          `<div class="fr"><span class="k">${esc(f.k)}</span><span class="v">${esc(f.v)}</span></div>`).join('')}</div>`
+    const facts = (t.facts || []).filter(f => f && f.k).length
+      ? `<div class="facts"><div class="t">Taken from this record</div>${t.facts.filter(f => f && f.k).map(factRow).join('')}</div>`
       : '';
     const body = t.kind === 'not_shared'
       ? `<div class="no"><span aria-hidden="true">🔒</span><span>${esc(t.sentence)}</span></div>`
-      : `<div class="a">${esc(t.sentence)}</div>`;
+      : `<div class="a">${sentenceHtml(t)}</div>`;
     const call = t.call && ask.phone
       ? `<a class="call" href="tel:${esc(ask.phone.replace(/[^0-9+]/g, ''))}">Call the farm · ${esc(ask.phone)}</a>`
       : '';
@@ -714,7 +747,7 @@
     } catch (e) { res = null; }
     ask.busy = false;
     if (res && res.ok && body && body.sentence) {
-      ask.thread.push({ question: body.question || question, sentence: body.sentence,
+      ask.thread.push({ question: body.question || question, sentence: body.sentence, bold: body.bold,
                         facts: body.facts || [], call: body.call, kind: body.kind });
       if (!payload.key) ask.text = '';
     } else {

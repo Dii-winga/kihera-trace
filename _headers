@@ -28,7 +28,7 @@
 # The farm's phone and email are tel: and mailto: links, which are
 # navigations, not loads, and no directive governs them.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'sha256-Xuhbg01hK7jdrRL8TXeUmf05G8wse+rPdUtLX7hsRf8=' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; connect-src https://eexgyyzsycdscfjkqaxu.supabase.co; img-src https://eexgyyzsycdscfjkqaxu.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-zcbwhHHQNKouMhMbKj/UduAU5pdjE0PZirf+ItTT8LM=' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; connect-src https://eexgyyzsycdscfjkqaxu.supabase.co; img-src https://eexgyyzsycdscfjkqaxu.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
